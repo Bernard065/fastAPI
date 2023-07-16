@@ -1,6 +1,5 @@
 # Import the fastAPI class from the fastapi module
-from fastapi import FastAPI
-from fastapi import Body
+from fastapi import FastAPI, Response, status, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 from random import randrange
@@ -16,6 +15,12 @@ async def find_post(id):
         if post['id'] == id: # Check if the current post's id matches the provided id
             return post # If there is a match, return the post
 
+# Asynchronously find the index of a post with a specific ID
+async def find_index_post(id):
+    # Iterate over the list of posts using enumerate to access both the index and the post
+    for i, post in enumerate(my_posts):
+        if post['id'] == id: # Check if the 'id' of the current post matches the provided 'id'
+            return post
 
 # Define the structure of a post using the Post model
 class Post(BaseModel):
@@ -45,12 +50,15 @@ async def get_posts():
 
 # # Define an API endpoint for HTTP GET requests at the '/posts/{id}' URL
 @app.get("/posts/{id}")
-async def get_post(id: int):
+async def get_post(id: int, response: Response):
     post = await find_post(id) # Await the find_post function
+    # If post is not found, raise an HTTP 404 exception
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with id: {id} was not found")
     return {"data": post} # Return a JSON response with the post
 
 
-@app.post("/posts")
+@app.post("/posts", status_code=status.HTTP_201_CREATED)
 async def create_post(new_post: Post):
    # Convert new_post to a dictionary using .model_dump() method
    post_dict= new_post.model_dump()
@@ -61,3 +69,14 @@ async def create_post(new_post: Post):
    # Return a JSON response with the new post dictionary
    return {"data": post_dict}
 
+
+# Define an API endpoint for HTTP DELETE requests at the '/posts/{id}' URL
+@app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_post(id: int):
+    # find the index in the array that has required ID
+    post = await find_index_post(id)
+    # checks if the post variable is None, indicating that a post with the provided ID was not found in the my_posts list.
+    if post is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post with id: {id} was not found")
+    my_posts.remove(post)
+    return {"message": "Post was successfully created"}
