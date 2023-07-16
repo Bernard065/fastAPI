@@ -79,4 +79,4 @@ async def delete_post(id: int):
     if post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post with id: {id} was not found")
     my_posts.remove(post)
-    return {"message": "Post was successfully created"}
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
