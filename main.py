@@ -12,6 +12,10 @@ async def read_root():
     # Return a JSON response with the message {"Hello": "World"}
     return {"Hello": "World"}
 
+@app.get("/posts")
+async def get_posts():
+    return {"data": "This is posts data"}
+
 # Define another API endpoint for HTTP GET requests at "/favicon.ico" URL
 @app.get("/favicon.ico")
 async def get_favicon():
