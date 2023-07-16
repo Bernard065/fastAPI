@@ -1,8 +1,17 @@
 # Import the fastAPI class from the fastapi module
 from fastapi import FastAPI
+from fastapi import Body
+from pydantic import BaseModel
+from typing import Optional
 
 # Create an instance of the fastAPI class
 app = FastAPI()
+
+class Post(BaseModel):
+    title: str
+    content: str
+    is_published: bool = True
+    rating: Optional[int] = None
 
 
 # Define an API endpoint for HTTP GET requests at the root URL '/'
@@ -12,9 +21,15 @@ async def read_root():
     # Return a JSON response with the message {"Hello": "World"}
     return {"Hello": "World"}
 
-@app.get("/post")
+@app.get("/posts")
 async def get_posts():
     return {"data": "This is posts data"}
+
+@app.post("/create_post")
+async def create_post(new_post: Post):
+    print(new_post)
+    print(new_post.dict())
+    return {"data": new_post}
 
 # Define another API endpoint for HTTP GET requests at "/favicon.ico" URL
 @app.get("/favicon.ico")
