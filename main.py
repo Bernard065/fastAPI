@@ -74,9 +74,24 @@ async def create_post(new_post: Post):
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_post(id: int):
     # find the index in the array that has required ID
-    post = await find_index_post(id)
+    index = await find_index_post(id)
     # checks if the post variable is None, indicating that a post with the provided ID was not found in the my_posts list.
-    if post is None:
+    if index is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post with id: {id} was not found")
-    my_posts.remove(post)
+    my_posts.remove(index)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+
+@app.put("/posts/{id}", status_code=status.HTTP_200_OK)
+async def update_post(id: int, updated_post: Post):
+    post = await find_post(id)  # Await the find_post function
+    # If post is not found, raise an HTTP 404 exception
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post with id: {id} was not found")
+    
+    # Update the post with the provided values from updated_post
+    post.update(updated_post.model_dump(exclude_unset=True))
+    
+    return {"data": post}  # Return a JSON response with the updated post
+
