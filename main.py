@@ -12,7 +12,7 @@ async def read_root():
     # Return a JSON response with the message {"Hello": "World"}
     return {"Hello": "World"}
 
-@app.get("/posts")
+@app.get("/post")
 async def get_posts():
     return {"data": "This is posts data"}
 
