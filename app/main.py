@@ -81,15 +81,15 @@ async def create_post(post: Post):
    return {"data": new_post}
 
 
-# Define an API endpoint for HTTP DELETE requests at the '/posts/{id}' URL
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_post(id: int):
-    # find the index in the array that has required ID
-    index = await find_index_post(id)
-    # checks if the post variable is None, indicating that a post with the provided ID was not found in the my_posts list.
-    if index is None:
+    cursor.execute("""DELETE FROM posts WHERE id = %s returning *""", (str(id),))
+    deleted_post = cursor.fetchone()
+    conn.commit()
+   
+    if deleted_post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post with id: {id} was not found")
-    my_posts.remove(index)
+    
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
