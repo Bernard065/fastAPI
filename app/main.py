@@ -1,10 +1,12 @@
-# Import the fastAPI class from the fastapi module
 from fastapi import FastAPI, Response, status, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 from random import randrange
+import psycopg2
+from psycopg2.extras import RealDictCursor
+import time
 
-# Create an instance of the fastAPI class
+
 app = FastAPI()
 
 # Initialize an empty list to store posts
@@ -29,45 +31,54 @@ class Post(BaseModel):
     is_published: bool = False
     rating: Optional[int] = None
 
+while True:
 
-# Define another API endpoint for HTTP GET requests at "/favicon.ico" URL
+    try:
+        conn = psycopg2.connect(host='localhost', database='fastapi', password='Access', cursor_factory=RealDictCursor)
+        cursor = conn.cursor()
+        print('Database connection was successful!')
+        break
+    except Exception as error:
+        print('Connection to database failed')
+        print('Error: ', error)
+        time.sleep(1)
+
+
 @app.get("/favicon.ico")
 async def get_favicon():
     return {"favicon": "This is a custom favicon response"}
 
-# Define an API endpoint for HTTP GET requests at the root URL '/'
-# The function is asynchronous (async) and will be executed when the endpoint is requested
+
 @app.get("/")
 async def read_root():
-    # Return a JSON response with the current list of posts
     return {"Hello": "World"}
 
-# Define an API endpoint for HTTP POST requests at the '/posts' UR
+
 @app.get("/posts")
 async def get_posts():
-    # Return a JSON response with the current list of post
-    return {"data": my_posts}
+    cursor.execute("""SELECT * FROM posts""")
+    posts = cursor.fetchall()
+    print(posts)
+    return {"data": posts}
 
-# # Define an API endpoint for HTTP GET requests at the '/posts/{id}' URL
+
 @app.get("/posts/{id}")
 async def get_post(id: int, response: Response):
     post = await find_post(id) # Await the find_post function
     # If post is not found, raise an HTTP 404 exception
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with id: {id} was not found")
-    return {"data": post} # Return a JSON response with the post
+    return {"data": post} 
 
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
-async def create_post(new_post: Post):
-   # Convert new_post to a dictionary using .model_dump() method
-   post_dict= new_post.model_dump()
-   # Generate a random ID and add it to the post dictionary
-   post_dict["id"] = randrange(0, 100000)
-   # Append the post dictionary to the my_post list
-   my_posts.append(post_dict)
-   # Return a JSON response with the new post dictionary
-   return {"data": post_dict}
+async def create_post(post: Post):
+   cursor.execute("""INSERT INTO posts(title, content, is_published) VALUES (%s, %s, %s)""",(post.title, post.content, post.is_published))
+   conn.commit()
+   cursor.execute("""SELECT * FROM posts WHERE id = (SELECT MAX(id) FROM posts)""")
+   new_post = cursor.fetchone()
+    
+   return {"data": new_post}
 
 
 # Define an API endpoint for HTTP DELETE requests at the '/posts/{id}' URL
