@@ -26,7 +26,7 @@ async def find_index_post(id):
 class Post(BaseModel):
     title: str
     content: str
-    is_published: bool = True
+    is_published: bool = False
     rating: Optional[int] = None
 
 
